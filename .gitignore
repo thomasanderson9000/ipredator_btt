@@ -1,2 +1,3 @@
 *.swp
-.env.user
+.*.env
+*.pyc

@@ -12,9 +12,10 @@ services:
     dns: # From https://www.ipredator.se/page/services#service_dns
       - 194.132.32.32
       - 46.246.46.246
-    env_file:
-      - .env      # Defaults
-      - .env.user # Overrides
+    # These get defined by running ./up.py
+    environment: 
+      - IPRED_USER=${IPRED_USER}
+      - IPRED_PASSWORD=${IPRED_PASSWORD}
     restart: always
   transmission:
     build: ./transmission
@@ -23,14 +24,14 @@ services:
     # This makes transmission use networking from vpn container
     network_mode: "service:vpn"  
     volumes:
-      - ./Downloads/In_Progress:/mnt/Downloads_In_Progress
-      - ./Downloads/Completed:/mnt/Downloads_Completed
+      - ${DOWNLOADS_IN_PROGRESS}:/mnt/Downloads_In_Progress
+      - ${DOWNLOADS_COMPLETED}:/mnt/Downloads_Completed
     restart: always
   portforward:
     build: ./portforward
     restart: always
     ports:
-      - ":9091:9091"
+      - "9091:9091"
     depends_on:
       - transmission 
     links:
