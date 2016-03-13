@@ -1,0 +1,37 @@
+version: '2'
+services:
+  vpn:
+    build: ./vpn
+    cap_add:
+      - NET_ADMIN
+    # This can be commented out, it just won't be able to load the sysctl.conf with optimum settings
+    # You could make those changes on the host system instead
+    privileged: true  
+    devices:
+      - '/dev/net/tun' 
+    dns: # From https://www.ipredator.se/page/services#service_dns
+      - 194.132.32.32
+      - 46.246.46.246
+    env_file:
+      - .env      # Defaults
+      - .env.user # Overrides
+    restart: always
+  transmission:
+    build: ./transmission
+    depends_on:
+      - vpn
+    # This makes transmission use networking from vpn container
+    network_mode: "service:vpn"  
+    volumes:
+      - ./Downloads/In_Progress:/mnt/Downloads_In_Progress
+      - ./Downloads/Completed:/mnt/Downloads_Completed
+    restart: always
+  portforward:
+    build: ./portforward
+    restart: always
+    ports:
+      - ":9091:9091"
+    depends_on:
+      - transmission 
+    links:
+      - vpn:transmission 
