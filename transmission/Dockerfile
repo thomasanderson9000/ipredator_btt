@@ -31,11 +31,12 @@ RUN yum install -y sudo iproute
 # Debugging comment out when done
 RUN yum install -y links telnet
 
-
-# Remove requiretty line which we need to remove so we can sudo a command in start.sh
+# Remove requiretty line which we need to remove so we can sudo a command in start_transmission.sh
 RUN mv /etc/sudoers /etc/sudoers.bak && cat /etc/sudoers.bak | grep -v requiretty > /etc/sudoers
 
+COPY change_transmission_uid_gid.sh /
 COPY start_transmission.sh /
 
-#CMD tail -F nofile.log
-ENTRYPOINT sudo -u transmission /start_transmission.sh
+# Note if change uid/gid script fails, we still continue. It just means the uid/gid
+# will not necessarily match up with the host docker machine
+ENTRYPOINT /change_transmission_uid_gid.sh; sudo -u transmission /start_transmission.sh
