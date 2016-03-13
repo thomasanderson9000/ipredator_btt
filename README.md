@@ -1,15 +1,22 @@
-# Docker Setup for IPredator VPN with Transmission Bittorrent 
-Docker setup for [IPredator](https://ipredator.se/) VPN with Transmission Bittorrent
+# Docker openvpn client Setup for IPredator VPN with Transmission Bittorrent 
+Docker setup for [IPredator](https://ipredator.se/) VPN with [Transmission](https://www.transmissionbt.com/) Bittorrent
+
+## Prerequisites
+
+I used the following docker and docker-compose versions. I recommend using these versions or newer.
+
+* docker-compose version 1.6.2, build 4d72027
+* Docker version 1.10.2, build c3959b1
 
 ## Setup and Run
+
+I am using environment variable files for user defined values like username and password. The ./setup.py script will read in all defaults and allow you to override them. ./up.py will read in required environment variables created with setup.py and run docker-compose build && docker-compose up <opt args> for you.
 
 ```
 ./setup.py
 ./up.py
 ```
+## Notes
 
 Similiar to https://github.com/dperson/transmission with some differences. This uses docker-compose and all images are in subdirectories. I also bind the rpc port and btt port to local and vpn interfaces to avoid leaking if the VPN is down. 
 
-I built this using:
-docker-compose version 1.6.2, build 4d72027
-Docker version 1.10.2, build c3959b1
