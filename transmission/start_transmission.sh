@@ -2,6 +2,15 @@
 # Start the transmission-daemon and bind us to local and vpn ip addresses
 # To lock down access and prevent leaks
 
+function get_vpn_ip() {
+    /sbin/ip addr show tun0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1
+}
+
+function restart_me() {
+    # Call myself 
+    exec "${BASH_SOURCE[0]}"
+}
+
 if [[ "$LOGNAME" != "transmission" ]]; then
     echo "Only run this as transmission"
     exit 1
@@ -25,10 +34,6 @@ do
 done
 
 
-function get_vpn_ip() {
-    /sbin/ip addr show tun0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1
-}
-
 VPN_IP=$(get_vpn_ip)
 LOCAL_IP=`/sbin/ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1`
 echo "VPN IP is '$VPN_IP', Local IP is '$LOCAL_IP'"
@@ -49,7 +54,7 @@ pkill -9 -f "$TD_NAME"
 TM_CMD="$TD_NAME --bind-address-ipv4 $VPN_IP \
         --rpc-bind-address $LOCAL_IP \
         --allowed 127.0.0.1,192.168.*.*,172.18.*.* \
-        --download-dir /mnt/Downloads_In_Progress \
+        --download-dir /mnt/Downloads_Completed \
         --incomplete-dir /mnt/Downloads_In_Progress \
         --logfile $TM_LOG $TRANSMISSION_DAEMON_ARGS"
 
@@ -62,14 +67,16 @@ $TM_CMD
 while true; do
     if [[ "$(get_vpn_ip)" != "$VPN_IP" ]]
     then
-        echo "VPN IP '$VPN_IP' changed to '$(get_vpn_ip)', exiting."
-        exit 1
+        echo "VPN IP '$VPN_IP' changed to '$(get_vpn_ip)', restarting."
+        restart_me
     elif ! pgrep -f "$TD_NAME" > /dev/null
     then
-        echo "transmission-daemon exited, exiting."
-        exit 1
+        echo "transmission-daemon exited, restarting."
+        restart_me
     fi
     echo "VPN IP ($VPN_IP) has not changed, transmission-daemon stil present, sleeping..."
     sleep 120
 done
 
+# Should never exit, but just in case
+exit 1
