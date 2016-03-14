@@ -7,6 +7,15 @@ if [[ "$LOGNAME" != "transmission" ]]; then
     exit 1
 fi
 
+# Directory where script is stored
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+TRANSMISSION_DAEMON_ARGS=$(cat $DIR/transmission-daemon-extra-args)
+if [[ ! "$TRANSMISSION_DAEMON_ARGS" ]]; then
+    echo "No extra arguments found for transmission-daemon."
+    echo "They can be added by setting them in transmission-daemon-extra-args"
+fi
+
 # Wait till we're connected and routable. Had issues with transmission not binding properly
 CURL_GOOGLE="curl --silent --max-time 15 --proxy 'http://proxy.ipredator.se:8080' 'http://www.google.se' > /dev/null"
 echo "Waiting for connection with: $CURL_GOOGLE"
@@ -40,12 +49,9 @@ pkill -9 -f "$TD_NAME"
 TM_CMD="$TD_NAME --bind-address-ipv4 $VPN_IP \
         --rpc-bind-address $LOCAL_IP \
         --allowed 127.0.0.1,192.168.*.*,172.18.*.* \
-        --logfile $TM_LOG \
-        --encryption-preferred \
-        --global-seedratio 1.0 \
         --download-dir /mnt/Downloads_In_Progress \
         --incomplete-dir /mnt/Downloads_In_Progress \
-        --dht --lpd --utp"
+        --logfile $TM_LOG $TRANSMISSION_DAEMON_ARGS"
 
 TAIL_CMD="tail -F $TM_LOG"
 pkill -f "$TAIL_CMD"

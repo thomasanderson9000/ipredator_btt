@@ -1,5 +1,11 @@
 #!/bin/bash
 # This script is used to change the transmission uid/gid to match a user on the host docker machine so volume perms are correct
+
+if [[ "$UID" != "0" ]]; then
+    echo "Can only be run as root."
+    exit 1
+fi
+
 if [[ ! "$TRANSMISSION_UID" || ! "$TRANSMISSION_GID" ]]; then
     echo "ERROR: Missing required environment variables TRANSMISSION_UID and TRANSMISSION_GID"
     exit 1

@@ -30,6 +30,7 @@ services:
     environment: 
       - TRANSMISSION_UID=${TRANSMISSION_UID}
       - TRANSMISSION_GID=${TRANSMISSION_GID}
+      - TRANSMISSION_DAEMON_ARGS=${TRANSMISSION_DAEMON_ARGS}
   portforward:
     build: ./portforward
     restart: always
