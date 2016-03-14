@@ -16,6 +16,9 @@ I am using environment variable files for user defined values like username and 
 ./setup.py
 ./up.py
 ```
+
+Once the VPN has connected successfully transmission-daemon will be launched. You can connect to it via http://docker_host:9091/transmission/web/.
+
 ## Notes
 
 Similiar to https://github.com/dperson/transmission with some differences. This uses docker-compose and all images are in subdirectories. I also bind the rpc port and btt port to local and vpn interfaces to avoid leaking if the VPN is down. 
