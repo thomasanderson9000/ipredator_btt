@@ -15,7 +15,7 @@ RUN ./configure && make && make install
 WORKDIR /
 RUN rm -rf /tmp/$TM_VERSION
 RUN groupadd -r transmission
-RUN useradd -r -g transmission -s /sbin/nologin transmission
+RUN useradd -r --create-hom -g transmission -s /sbin/nologin transmission
 
 RUN yum install -y sudo iproute
 # Debugging comment out when done
@@ -29,14 +29,13 @@ RUN mkdir /var/log/transmission-daemon && chown transmission:transmission /var/l
 RUN mkdir /mnt/Downloads_In_Progress && mkdir /mnt/Downloads_Completed
 RUN chown transmission:transmission /mnt/Downloads_In_Progress && chown transmission:transmission /mnt/Downloads_Completed
 WORKDIR /home/transmission
-RUN mkdir -p ./.config/transmission-daemon
 # A few transmission settings are not settable on the command line so we need this
 # https://blog.ipredator.se/howto/restricting-transmission-to-the-vpn-interface-on-ubuntu-linux.html
-COPY settings.json ./.config/transmission-daemon/
+COPY settings.partial.json ./
 # This will be read in by start_transmission.sh. Doing this to make it easy to restart if needed.
 RUN touch ./transmission-daemon-extra-args
-COPY start_transmission.sh /home/transmission
-RUN chown -R transmission:transmission /home/transmission
+COPY start_transmission.sh . 
+RUN chown -R transmission:transmission . 
 
 COPY change_transmission_uid_gid.sh /
 RUN echo "${TRANSMISSION_DAEMON_ARGS}" > ./transmission-daemon-extra-args
@@ -44,4 +43,5 @@ RUN echo "${TRANSMISSION_DAEMON_ARGS}" > ./transmission-daemon-extra-args
 # will not necessarily match up with the host docker machine
 ENTRYPOINT echo -n "${TRANSMISSION_DAEMON_ARGS}" > ./transmission-daemon-extra-args; \
            /change_transmission_uid_gid.sh; \
+           chown transmission:transmission ./.config; \
            sudo -u transmission ./start_transmission.sh

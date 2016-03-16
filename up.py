@@ -54,4 +54,6 @@ if __name__ == "__main__":
     up_args = ' '.join(sys.argv[1:])
     cmd = 'source {} && docker-compose build && docker-compose up {}'.format(allvars_filename, up_args)
     print("Running: {}".format(cmd))
-    call(cmd, shell=True)
+    # This replaces current execution so we don't have weird signal
+    # trapping behavior if I just used call
+    os.execlp('bash', 'docker-compose', '-c', cmd)

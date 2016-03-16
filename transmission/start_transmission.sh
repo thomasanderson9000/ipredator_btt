@@ -19,6 +19,17 @@ fi
 # Directory where script is stored
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# Bootstrap our named volume if it hasn't been yet
+TD_CONFIG=$DIR/.config/transmission-daemon
+if [[ ! -e "$TD_CONFIG" ]]; then
+    mkdir -p $TD_CONFIG 
+    # A few transmission settings are not settable on the command line so we need this
+    # https://blog.ipredator.se/howto/restricting-transmission-to-the-vpn-interface-on-ubuntu-linux.html
+    cp $DIR/settings.partial.json $TD_CONFIG/settings.json
+else
+    echo "Re-using existing settings.json from persistent data volume."
+fi
+
 TRANSMISSION_DAEMON_ARGS=$(cat $DIR/transmission-daemon-extra-args)
 if [[ ! "$TRANSMISSION_DAEMON_ARGS" ]]; then
     echo "No extra arguments found for transmission-daemon."

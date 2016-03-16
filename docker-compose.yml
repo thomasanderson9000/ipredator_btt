@@ -26,6 +26,8 @@ services:
     volumes:
       - ${DOWNLOADS_IN_PROGRESS}:/mnt/Downloads_In_Progress
       - ${DOWNLOADS_COMPLETED}:/mnt/Downloads_Completed
+      - transmission_config:/home/transmission/.config
+      #- ./transmission/.config:/home/transmission/.config
     restart: always
     environment: 
       - TRANSMISSION_UID=${TRANSMISSION_UID}
@@ -40,3 +42,5 @@ services:
       - transmission 
     links:
       - vpn:transmission 
+volumes:
+  transmission_config:
