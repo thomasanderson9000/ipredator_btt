@@ -26,8 +26,8 @@ services:
     volumes:
       - ${DOWNLOADS_IN_PROGRESS}:/mnt/Downloads_In_Progress
       - ${DOWNLOADS_COMPLETED}:/mnt/Downloads_Completed
+      # Using a named volume to allow the config directory to persist reboot
       - transmission_config:/home/transmission/.config
-      #- ./transmission/.config:/home/transmission/.config
     restart: always
     environment: 
       - TRANSMISSION_UID=${TRANSMISSION_UID}

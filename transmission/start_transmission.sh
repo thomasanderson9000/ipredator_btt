@@ -42,6 +42,7 @@ echo "Waiting for connection with: $CURL_GOOGLE"
 until eval $CURL_GOOGLE
 do
     echo "Retrying $CURL_GOOGLE"
+    sleep 5
 done
 
 
