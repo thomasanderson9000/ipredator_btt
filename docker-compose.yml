@@ -1,5 +1,12 @@
 version: '2'
 services:
+  # dns runs dnsmasq and will only resolve ipredator dns host
+  dns:
+    build: ./dns
+    restart: always
+    dns: # From https://www.ipredator.se/page/services#service_dns
+      - 194.132.32.32
+      - 46.246.46.246
   vpn:
     build: ./vpn
     cap_add:
@@ -9,14 +16,13 @@ services:
     privileged: true  
     devices:
       - '/dev/net/tun' 
-    dns: # From https://www.ipredator.se/page/services#service_dns
-      - 194.132.32.32
-      - 46.246.46.246
     # These get defined by running ./up.py
     environment: 
       - IPRED_USER=${IPRED_USER}
       - IPRED_PASSWORD=${IPRED_PASSWORD}
     restart: always
+    links:
+      - dns 
   transmission:
     build: ./transmission
     depends_on:

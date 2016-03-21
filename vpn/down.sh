@@ -1,2 +1,3 @@
 #!/bin/bash
-mv /etc/resolv.conf.before_vpn /etc/resolv.conf
+# mv doesn't work
+cat /etc/resolv.conf.before_vpn > /etc/resolv.conf
