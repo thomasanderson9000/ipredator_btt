@@ -40,4 +40,5 @@ iptables -A OUTPUT -j DROP
 touch /etc/resolv.conf.before_vpn
 
 chown openvpn:openvpn /etc/resolv.conf*
+chmod u+w /etc/resolv.conf
 exec sudo -u openvpn /usr/sbin/openvpn --config /etc/openvpn/IPredator-CLI-Password.conf

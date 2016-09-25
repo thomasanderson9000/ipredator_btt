@@ -58,7 +58,7 @@ fi
 # Launch transmission-daemon with bound to IP addresses to prevent accidentally
 # sending traffic outside of the VPN
 
-TD_NAME="/usr/local/bin/transmission-daemon"
+TD_NAME="/usr/bin/transmission-daemon"
 TM_LOG="/var/log/transmission-daemon/transmission-daemon.log"
 echo "Killing any existing $TD_NAME's"
 pkill -9 -f "$TD_NAME"
@@ -90,5 +90,3 @@ while true; do
     sleep 120
 done
 
-# Should never exit, but just in case
-exit 1
