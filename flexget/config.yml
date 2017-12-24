@@ -1,0 +1,24 @@
+tasks:
+  tv:
+    rss: ${RSS} 
+    all_series: yes
+    thetvdb_lookup: yes
+    transmission:
+      host: vpn
+      port: 9091
+      ratio: 1
+    set:
+      path: /mnt/Downloads_Completed/_TV/{{ tvdb_series_name }}
+      main_file_only: yes
+      content_filename: "{{ tvdb_series_name }} - {{ tvdb_ep_id }} - {{ tvdb_ep_name|default('Unknown') }}"
+      rename_like_files: yes
+      skip_files:
+      - '*.nfo'
+      - '*.sfv'
+      - '*[sS](/sS)ample*'
+      - '*.txt'
+    clean_transmission:
+      host: vpn
+      port: 9091
+      finished_for: 10 days
+
