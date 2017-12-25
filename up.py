@@ -40,7 +40,7 @@ def ensure_overrides_exist(path):
 
 if __name__ == "__main__":
     if any(arg in sys.argv for arg in ['-h', '--help']):
-        print("Sources required environment varialbes and runs:")
+        print("Sources required environment variables and runs:")
         print("docker-compose build docker-compose up <args>")
         print("./up.py [OPT: arguments to add after docker-compose up]")
         print("Examples:")
