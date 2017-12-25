@@ -50,8 +50,7 @@ services:
   portforward:
     build: ./portforward
     restart: always
-    environment:
-      - FORWARD_PORT=9091
+    command: vpn 9091
     ports:
       - "9091:9091"
     depends_on:
