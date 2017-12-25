@@ -39,6 +39,14 @@ services:
       - TRANSMISSION_UID=${TRANSMISSION_UID}
       - TRANSMISSION_GID=${TRANSMISSION_GID}
       - TRANSMISSION_DAEMON_ARGS=${TRANSMISSION_DAEMON_ARGS}
+  transmission-control:
+    build: ./transmission-control
+    depends_on:
+      - transmission 
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: --host vpn --port 9091 --seconds 30
   portforward:
     build: ./portforward
     restart: always
