@@ -23,13 +23,13 @@ while True:
             if last_state != 'active':
                 print("Turning DHT and PEX: ON")
                 client.session.set(pex_enabled=True)
-                client.session.set(utp_enabled=True)
+                client.session.set(dht_enabled=True)
                 last_state = 'active'
         else:
             if last_state != 'inactive':
                 print("Turning DHT and PEX: OFF")
                 client.session.set(pex_enabled=False)
-                client.session.set(utp_enabled=False)
+                client.session.set(dht_enabled=False)
                 last_state = 'inactive'
     except URLError as e:
         print("URL Error!")
