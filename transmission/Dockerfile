@@ -2,9 +2,9 @@ FROM centos:7
 MAINTAINER "Anonymous" <anon@coward>
 
 RUN yum install -y epel-release
-RUN yum install transmission-daemon -y
-
-RUN yum install -y sudo iproute
+RUN yum install -y transmission-daemon sudo iproute python-pip python-devel gcc
+RUN pip install --upgrade setuptools pip
+RUN pip install shifter requests netifaces psutil
 
 # Remove requiretty line which we need to remove so we can sudo a command in start_transmission.sh
 RUN mv /etc/sudoers /etc/sudoers.bak && cat /etc/sudoers.bak | grep -v requiretty > /etc/sudoers
@@ -17,16 +17,12 @@ WORKDIR /var/lib/transmission
 # A few transmission settings are not settable on the command line so we need this
 # https://blog.ipredator.se/howto/restricting-transmission-to-the-vpn-interface-on-ubuntu-linux.html
 COPY settings.partial.json ./
-# This will be read in by start_transmission.sh. Doing this to make it easy to restart if needed.
-RUN touch ./transmission-daemon-extra-args
-COPY start_transmission.sh . 
+COPY drive.py .
 RUN chown -R transmission:transmission . 
 
 COPY change_transmission_uid_gid.sh /
-RUN echo "${TRANSMISSION_DAEMON_ARGS}" > ./transmission-daemon-extra-args
 # Note if change uid/gid script fails, we still continue. It just means the uid/gid
 # will not necessarily match up with the host docker machine
-ENTRYPOINT echo -n "${TRANSMISSION_DAEMON_ARGS}" > ./transmission-daemon-extra-args; \
-           /change_transmission_uid_gid.sh; \
+ENTRYPOINT /change_transmission_uid_gid.sh; \
            chown transmission:transmission ./.config; \
-           sudo -u transmission ./start_transmission.sh
+           sudo -u transmission python -u ./drive.py
