@@ -20,5 +20,5 @@ tasks:
     clean_transmission:
       host: vpn
       port: 9091
-      finished_for: 10 days
+      finished_for: 3 days
 
