@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 """Script to setup required environment vars. """
 from __future__ import print_function
 import sys

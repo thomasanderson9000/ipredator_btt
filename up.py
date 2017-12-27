@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 """Script to startup environment using docker-compose build && docker-compose up <args>.
 
    Reads in required environment variables."""
