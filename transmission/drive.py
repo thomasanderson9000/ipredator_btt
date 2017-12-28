@@ -14,14 +14,13 @@ import psutil
 PORT = 9091
 VPN_INTERFACE = 'tun0'
 LOCAL_INTERFACE = 'eth0'
-CONNECTION_CHECK_URL = "http://www.google.se"
-CONNECTION_CHECK_PROXY = "http://proxy.ipredator.se:8080"
 WAIT_CYCLE = 30
 TM_LOG = "/var/log/transmission-daemon/transmission-daemon.log"
 
 def tail_log():
+    """Tail transmission log in background."""
     call("pkill -f tail", shell=True)
-    call("tail -n 0 -F {} &".format(TM_LOG), shell=True)
+    call("tail -F {} &".format(TM_LOG), shell=True)
 
 def torrents_active():
     """Return boolean if any torrents are active"""
@@ -37,33 +36,22 @@ def torrents_active():
         print("Can't connect to transmission on {}:{}".format(ip, port))
     return False
 
-
-def wait_for_connection():
-    proxies = {
-          'http': CONNECTION_CHECK_PROXY,
-          'https': CONNECTION_CHECK_PROXY,
-    }
-    while True:
-        try:
-            print("Checking connection to {}...".format(CONNECTION_CHECK_URL))
-            r = requests.get(CONNECTION_CHECK_URL,
-                            timeout=15, proxies=proxies)
-            print("Connected!")
-            return True
-        except ConnectionError as e:
-            print("Connection not active")
-        sleep(5)
-
 def get_vpn_ip():
+    """Get VPN ip, return None if we don't have it yet"""
     try:
-        vpn_ip = ni.ifaddresses(VPN_INTERFACE)[ni.AF_INET][0]['addr']
-        socket.inet_aton(vpn_ip)  # Validate ip
-        return vpn_ip
-    except socket.error:
-        return None
+        if VPN_INTERFACE in ni.interfaces():
+            vpn_ip = ni.ifaddresses(VPN_INTERFACE)[ni.AF_INET][0]['addr']
+            socket.inet_aton(vpn_ip)  # Validate ip
+            return vpn_ip
+    except socket.error, KeyError:
+        pass
+    return None
 
 
 def get_bind_to_ip():
+    """Get the ip transmission should bind to
+      If there are no torrents active or we're
+      not connected to the vpn, bind to localhost."""
     localhost = '127.0.0.1'
     if not torrents_active():
         return localhost
@@ -74,6 +62,8 @@ def get_bind_to_ip():
 
 
 class CmdLine(object):
+    """Command line object stores arg in dict
+       Allows single args to be changed by updating keys."""
     def __init__(self, start_cmd):
         self.start_cmd = start_cmd
         self.args = {}
@@ -88,6 +78,7 @@ class CmdLine(object):
         return full_cmd
 
 class TransmissionDaemon(object):
+    """Make it easy to restart daemon on bind change."""
     def __init__(self):
         local_ip = ni.ifaddresses(LOCAL_INTERFACE)[ni.AF_INET][0]['addr']
         self.cmdline = CmdLine(start_cmd='/usr/bin/transmission-daemon')
@@ -106,6 +97,8 @@ class TransmissionDaemon(object):
         self.cmdline.args = dict(self.base_args)
         self.cmdline.args['bind-address-ipv4'] = ip
         if ip == '127.0.0.1':
+            # dht, lpd, utp can contribute to bandwidth
+            # usage when there are no active torrents
             self.cmdline.args['no-dht'] = None
             self.cmdline.args['no-lpd'] = None
             self.cmdline.args['no-utp'] = None
@@ -146,8 +139,7 @@ class DaemonRestarter(object):
             self.restart()
 
 if __name__ == "__main__":
-    #tail_log()
-    #wait_for_connection()
+    tail_log()
     tm_daemon = TransmissionDaemon()
     while True:
         tm_daemon.set_bind(get_bind_to_ip())
