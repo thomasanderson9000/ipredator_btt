@@ -1,12 +1,12 @@
 version: '2'
 services:
-  # dns runs dnsmasq and will only resolve ipredator dns host
+  # dns runs dnsmasq and will only resolve dns host
   dns:
     build: ./dns
     restart: always
-    dns: # From https://www.ipredator.se/page/services#service_dns
-      - 194.132.32.32
-      - 46.246.46.246
+    dns:  # From https://dns.watch/index 
+      - 84.200.69.80 
+      - 84.200.70.40 
   vpn:
     build: ./vpn
     cap_add:
@@ -18,8 +18,9 @@ services:
       - '/dev/net/tun' 
     # These get defined by running ./up.py
     environment: 
-      - IPRED_USER=${IPRED_USER}
-      - IPRED_PASSWORD=${IPRED_PASSWORD}
+      - OVPN_FILE=${OVPN_FILE}
+      - VPN_USER=${VPN_USER}
+      - VPN_PASSWORD=${VPN_PASSWORD}
     restart: always
     links:
       - dns 
