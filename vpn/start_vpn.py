@@ -12,7 +12,10 @@ import os.path
 BASE_DIR = '/etc/openvpn'
 
 def run(cmd):
-    call(cmd, shell=True)
+    print("Running: {}".format(cmd))
+    exit_code = call(cmd, shell=True)
+    print("Exit Code: {} From: {}".format(exit_code, cmd))
+
 
 def easy_exec(cmd):
     """Make os.exec friendly"""
@@ -108,7 +111,7 @@ def openvpn(vpn_file, auth_file):
         print("Could not find ovpn file {}".format(vpn_file))
         os.exit(1)
    # Replace current process with openvpn process
-    easy_exec('sudo -u openvpn /usr/sbin/openvpn ' +
+    easy_exec('gosu openvpn /usr/sbin/openvpn ' +
                 '--config "{}" '.format(vpn_file) +
                 '--dev tun0 ' +
                 '--auth-user-pass {} '.format(auth_file) +
@@ -131,6 +134,9 @@ if __name__ == "__main__":
     # docker-compose defaults us to using a name service on 127.0.0.11
     change_nameserver_to_dns_container()
     create_firewall(vpn_ports=get_vpn_ports(ovpn_file))
+    # chown'ing before this point doesn't seem to stick
+    run("chown openvpn:openvpn /etc/resolv.conf*")
+    run("chmod u+w /etc/resolv.conf")
     openvpn(vpn_file=ovpn_file,
             auth_file=os.environ['VPN_AUTH_FILE'])
 

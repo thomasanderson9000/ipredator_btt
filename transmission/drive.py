@@ -4,6 +4,7 @@ from urllib2 import URLError
 from time import sleep
 from requests import ConnectionError
 from subprocess import call
+import signal
 import requests
 import socket
 import netifaces as ni
@@ -16,6 +17,10 @@ VPN_INTERFACE = 'tun0'
 LOCAL_INTERFACE = 'eth0'
 WAIT_CYCLE = 30
 TM_LOG = "/var/log/transmission-daemon/transmission-daemon.log"
+
+def sigterm_handler(_signo, _stack_frame):
+    print("sigterm_handler executed, %s, %s" % (_signo, _stack_frame))
+    sys.exit(0)
 
 def tail_log():
     """Tail transmission log in background."""
@@ -89,7 +94,8 @@ class TransmissionDaemon(object):
                           'incomplete-dir'   : '/mnt/Downloads_In_Progress',
                           'logfile'          : TM_LOG,
                           'global-seedratio' : 1.0,
-                          'no-portmap'       : None,
+                          'no-utp'           : None,
+                          'portmap'          : None,
                         }
         self.daemon = DaemonRestarter('transmission-daemon')
 
@@ -101,11 +107,9 @@ class TransmissionDaemon(object):
             # usage when there are no active torrents
             self.cmdline.args['no-dht'] = None
             self.cmdline.args['no-lpd'] = None
-            self.cmdline.args['no-utp'] = None
         else:
             self.cmdline.args['dht'] = None
             self.cmdline.args['lpd'] = None
-            self.cmdline.args['utp'] = None
         self.daemon.cmdline = str(self.cmdline)
 
 
@@ -139,6 +143,7 @@ class DaemonRestarter(object):
             self.restart()
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, sigterm_handler)
     tail_log()
     tm_daemon = TransmissionDaemon()
     while True:
