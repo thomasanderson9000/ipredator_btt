@@ -22,8 +22,8 @@ services:
       - VPN_USER=${VPN_USER}
       - VPN_PASSWORD=${VPN_PASSWORD}
     restart: always
-    links:
-      - dns 
+    depends_on:
+      - dns
   transmission:
     build: ./transmission
     depends_on:

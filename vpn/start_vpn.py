@@ -118,8 +118,8 @@ def openvpn(vpn_file, auth_file):
                 '--iproute /usr/local/sbin/unpriv-ip ' +
                 '--script-security 2 ' +
                 '--up-restart ' +
-                '--up {}/update-resolv-conf.py '.format(BASE_DIR) +
-                '--down {}/update-resolv-conf.py'.format(BASE_DIR))
+                '--up "/bin/sudo --preserve-env {}/update-resolv-conf.py" '.format(BASE_DIR) +
+                '--down "/bin/sudo --preserve-env {}/update-resolv-conf.py"'.format(BASE_DIR))
 
 
 if __name__ == "__main__":
@@ -134,9 +134,6 @@ if __name__ == "__main__":
     # docker-compose defaults us to using a name service on 127.0.0.11
     change_nameserver_to_dns_container()
     create_firewall(vpn_ports=get_vpn_ports(ovpn_file))
-    # chown'ing before this point doesn't seem to stick
-    run("chown openvpn:openvpn /etc/resolv.conf*")
-    run("chmod u+w /etc/resolv.conf")
     openvpn(vpn_file=ovpn_file,
             auth_file=os.environ['VPN_AUTH_FILE'])
 

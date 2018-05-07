@@ -27,6 +27,14 @@ RUN set -ex; \
 	yum -y remove wget dpkg; \
 	yum clean all
 
+# https://github.com/krallin/tini#using-tini
+ENV TINI_VERSION v0.16.1
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc /tini.asc
+RUN gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 \
+        && gpg --verify /tini.asc \
+        && chmod +x /tini
+
 # Remove requiretty line which we need to remove so we can sudo a command in start_transmission.sh
 RUN mv /etc/sudoers /etc/sudoers.bak && cat /etc/sudoers.bak | grep -v requiretty > /etc/sudoers
 
@@ -42,10 +50,12 @@ WORKDIR /var/lib/transmission
 # https://blog.ipredator.se/howto/restricting-transmission-to-the-vpn-interface-on-ubuntu-linux.html
 COPY settings.partial.json ./
 COPY start.sh .
+COPY healthcheck.py .
 COPY drive.py .
 RUN chown -R transmission:transmission . 
 
 COPY change_transmission_uid_gid.sh /
 # Note if change uid/gid script fails, we still continue. It just means the uid/gid
 # will not necessarily match up with the host docker machine
-ENTRYPOINT ./start.sh
+
+ENTRYPOINT ["/tini", "-g", "--", "./start.sh"]

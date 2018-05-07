@@ -5,9 +5,10 @@
 
 from __future__ import print_function
 import os
-import sys
 import os.path
+import sys
 import re
+import traceback
 
 def up(resolvconf):
     new_resolv_contents = ''
@@ -17,9 +18,12 @@ def up(resolvconf):
         for dns_server in dns_servers:
             new_resolv_contents += "nameserver {}\n".format(dns_server)
     if new_resolv_contents:
+	print("Current contents of {}:".format(resolvconf))
+        with open(resolvconf, "r") as f:
+            print(f.read())
         print("Writing the following to {}:\n{}".format(resolvconf, new_resolv_contents))
-        with open(resolvconf, "w") as f:
-            f.write(new_resolv_contents)
+	with open(resolvconf, "w") as f:
+	    f.write(new_resolv_contents)
     else:
         print("Nothing to write to {}".format(resolvconf))
 
@@ -39,8 +43,8 @@ if __name__ == "__main__":
 	print("Environment variable script_type is not set. Call this from openvpn.")
 	sys.exit(1)
     if not os.path.isfile(resolvconf_before):
-        print("Backup of resolv.conf is not in place: {}".format(resolvconf_before))
-        sys.exit(1)
+	print("Backup of resolv.conf is not in place: {}".format(resolvconf_before))
+	sys.exit(1)
     script_type = os.environ['script_type']
 
     if script_type == 'up':

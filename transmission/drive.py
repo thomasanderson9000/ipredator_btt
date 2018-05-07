@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 from __future__ import print_function
-from urllib2 import URLError
 from time import sleep
-from requests import ConnectionError
 from subprocess import call
+import sys
 import signal
 import requests
 import socket
 import netifaces as ni
 import shifter
 import os
+import os.path
 import psutil
 
 PORT = 9091
@@ -24,34 +24,35 @@ def sigterm_handler(_signo, _stack_frame):
 
 def tail_log():
     """Tail transmission log in background."""
-    call("pkill -f tail", shell=True)
+    while not os.path.isfile(TM_LOG):
+	print("Waiting for {}...".format(TM_LOG))
+	sleep(2)
     call("tail -F {} &".format(TM_LOG), shell=True)
 
-def torrents_active():
-    """Return boolean if any torrents are active"""
+def get_active_torrents_count():
     ip = ni.ifaddresses(LOCAL_INTERFACE)[ni.AF_INET][0]['addr']
     port = PORT
     client = shifter.Client(host=ip, port=port)
+    return client.session.stats()[u'active_torrent_count']
+
+def torrents_active():
+    """Return boolean if any torrents are active"""
     try:
-        active_torrent_count = client.session.stats()[u'active_torrent_count']
-        print("Active torrents: {}".format(active_torrent_count))
-        if active_torrent_count:
-            return True
-    except URLError as e:
-        print("Can't connect to transmission on {}:{}".format(ip, port))
+        count = get_active_torrents_count()
+        return count != 0
+    except Exception as exc:
+        print("Problem getting active torrent count: {}".format(exc))
     return False
 
 def get_vpn_ip():
     """Get VPN ip, return None if we don't have it yet"""
     try:
-        if VPN_INTERFACE in ni.interfaces():
-            vpn_ip = ni.ifaddresses(VPN_INTERFACE)[ni.AF_INET][0]['addr']
-            socket.inet_aton(vpn_ip)  # Validate ip
-            return vpn_ip
-    except socket.error, KeyError:
-        pass
-    return None
-
+        vpn_ip = ni.ifaddresses(VPN_INTERFACE)[ni.AF_INET][0]['addr']
+        socket.inet_aton(vpn_ip)  # Validate ip
+        return vpn_ip
+    except Exception as exc:
+        print("ERROR: Could not get vpn IP.")
+        raise exc
 
 def get_bind_to_ip():
     """Get the ip transmission should bind to
@@ -144,7 +145,6 @@ class DaemonRestarter(object):
 
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, sigterm_handler)
-    tail_log()
     tm_daemon = TransmissionDaemon()
     while True:
         tm_daemon.set_bind(get_bind_to_ip())

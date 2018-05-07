@@ -24,6 +24,17 @@ RUN set -ex; \
 	yum -y remove wget dpkg; \
 	yum clean all
 
+# https://github.com/krallin/tini#using-tini
+ENV TINI_VERSION v0.16.1
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc /tini.asc
+RUN gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 \
+        && gpg --verify /tini.asc \
+        && chmod +x /tini
+
+RUN yum install -y python2-pip python-devel gcc && pip install --upgrade setuptools pip && \
+        pip install psutil
+
 COPY sysctl.conf /etc
 COPY ./etc_openvpn/ /etc/openvpn/
 # start_vpn.sh will populate this file from environment variables
@@ -32,6 +43,9 @@ RUN touch $VPN_AUTH_FILE && chown -R root:openvpn /etc/openvpn/* && chmod -R ug+
 
 # Allow us to run openvpn as openvpn user
 RUN echo "openvpn ALL=(ALL) NOPASSWD: /sbin/ip" >> /etc/sudoers
+# /etc/resolv.conf gets root perms even after I reset them
+# this will fix that
+RUN echo "openvpn ALL=(ALL) NOPASSWD:SETENV: /etc/openvpn/update-resolv-conf.py" >> /etc/sudoers
 COPY unpriv-ip /usr/local/sbin/
 # Remove requiretty line which we need to remove so we can sudo a command in start_vpn.sh
 RUN mv /etc/sudoers /etc/sudoers.bak && cat /etc/sudoers.bak | grep -v requiretty > /etc/sudoers
@@ -40,4 +54,4 @@ WORKDIR /etc/openvpn
 COPY start_vpn.py /
 
 # python -u for unbuffered output
-ENTRYPOINT ["python", "-u", "/start_vpn.py"]
+ENTRYPOINT ["/tini", "-g", "--", "python", "-u", "/start_vpn.py"]
